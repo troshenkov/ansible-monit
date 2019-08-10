@@ -1,2 +1,0 @@
-# eda-playbooks
-
