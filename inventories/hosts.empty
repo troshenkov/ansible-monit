@@ -1,0 +1,37 @@
+# Inventory file for San Jose LSF Farm
+# Created at 00/00/00 00:00:00 VV ZZZ
+
+[monit:children]
+local
+test
+
+[farm-sjc:children]
+dsw-lnx
+eag-lnx
+rtg-lnx
+rtp-hw
+rtp-lnx
+sjc-hw
+sjc-hw-masters
+
+[local]
+localhost  ansible_connection=local
+
+[test]
+bvitro-monit-1
+bvitro-monit-2
+
+[sjc-hw-masters]
+
+[dsw-lnx]
+
+[eag-lnx]
+
+[rtg-lnx]
+
+[rtp-hw]
+
+[rtp-lnx]
+
+[sjc-hw]
+

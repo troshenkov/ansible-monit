@@ -1,0 +1,146 @@
+#!/bin/sh
+
+#
+### BEGIN INIT INFO
+# Provides:          monit
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: service and resource monitoring daemon
+### END INIT INFO
+### For redhat chkconfig
+# monit   Start the monit daemon on the host
+#
+# chkconfig: 35 99 01
+# description: Starts the 'monit' system monitor daemon. See /opt/monit for configuration
+#
+# /etc/init.d/monit start and stop monit daemon monitor process.
+
+# TEMPLATE
+# {{ ansible_managed }}
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON="{{ monit_dir_bin }}/{{ _name_ }}"
+CONFIG="{{ monit_conf_file }}"
+LOG="{{ monit_log_file }}"
+NAME="{{ _name_ }}"
+DESC="Daemon monitor"
+
+ARGS="-I -c $CONFIG"
+
+monit_check_daemon () {
+    if [[ ! -x $DAEMON ]]; then
+        >&2 echo "Daemon $DAEMON not executable."
+        exit 1
+    fi
+}
+
+monit_check_config () {
+    if [[ ! -r $CONFIG ]]; then
+        >&2 echo "Config file $CONFIG not readable."
+        exit 1
+    fi
+
+    # Check for emtpy config, probably default configfile.
+    if [[ "`grep -s -v \"^#\" $CONFIG`" = "" ]]; then
+        echo "empty config, please edit $CONFIG."
+        exit 1
+    fi
+}
+
+monit_check_perms () {
+    # Check the permission on configfile. 
+    # The permission must not have more than -rwx------ (0700) permissions.
+   
+    # Skip checking, fix perms instead.
+    /bin/chmod go-rwx $CONFIG
+    /bin/chown root $CONFIG
+
+}
+
+monit_check_syntax () {
+    $DAEMON -t $ARGS 2>/dev/null >/dev/null
+    if [[ $? -eq 1 ]] ; then
+        echo "Error(s) in config file $CONFIG:"
+        $DAEMON -t $ARGS
+        exit 1
+    fi
+}
+
+
+monit_checks () {
+    monit_check_daemon
+    # Check for emtpy configfile
+    monit_check_config
+    # Check permissions of configfile
+    monit_check_perms
+    # Check syntax of config file
+    monit_check_syntax
+}
+
+monit_start () {
+    echo -n "Starting $DESC: $NAME"
+    monit_checks
+    $DAEMON $ARGS >> $LOG 2>&1 &
+    echo "."
+}
+
+monit_stop () {
+    echo "Stopping $DESC: $NAME"
+    $DAEMON -c $CONFIG quit
+    echo "."
+}
+
+case "$1" in
+    start)
+        monit_start
+        ;;
+    stop)
+        monit_stop
+        ;;
+    restart)
+        monit_stop
+        echo Sleeping for a few seconds
+        sleep 5
+        monit_start
+        ;;
+    monitor)
+        mon_action="${2:-all}"
+        $DAEMON -c $CONFIG monitor $mon_action
+        ;;
+    unmonitor)
+        mon_action="${2:-all}"
+        $DAEMON -c $CONFIG unmonitor $mon_action
+        ;;
+    reload)
+        $DAEMON -c $CONFIG reload
+        ;;
+    syntax)
+        monit_check_syntax
+        ;;
+    status)
+        $DAEMON -c $CONFIG status
+        ;;
+    summary)
+        $DAEMON -c $CONFIG summary
+        ;;
+    update)
+        UPDATE_SCRIPT=/auto/edalocal_sjc/monit/scripts/update_monit.sh
+        case "$2" in
+            all)
+                $UPDATE_SCRIPT --all /auto/edalocal_sjc/monit
+                ;;
+            *)
+                $UPDATE_SCRIPT --update $2
+                ;;
+        esac
+        ;;
+    *)
+        echo "Usage: $NAME {start|stop|restart|force-reload|status|summary|syntax|[un]monitor [service|all]}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+

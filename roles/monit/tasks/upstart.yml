@@ -1,0 +1,20 @@
+---
+# System V
+
+- name: System V | Init install
+  template:
+    src: init.j2
+    dest: "{{ init_dir }}/{{ _name_ }}"
+    mode: 0744
+
+- name: System V | On boot '{{ _name_ }}'
+  service:
+    name: "{{ _name_ }}"
+    enabled: yes
+  
+- name: System V | Starting '{{ _name_ }}'
+  service:
+    name: "{{ _name_ }}"
+    pattern: "{{ init_dir }}"
+    state: started
+

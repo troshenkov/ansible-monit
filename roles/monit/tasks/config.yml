@@ -1,0 +1,47 @@
+---
+
+- name: Monitors - Write Monitors
+  template:
+    src: monitor.j2
+    dest: "{{ monit_dir_rc }}/{{ item.name }}"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+  with_items: "{{ monit_services }}"
+  notify: restart
+
+- name: Monitors - Registers Configured Monitors
+  template:
+    src: "monit.fact.j2"
+    dest: "{{ monit_dir_facts }}/monit.fact"
+    mode: 0644
+  register: monit_write_facts
+
+- name: Monitors - Reload Facts
+  setup:
+    fact_path: "{{ monit_dir_facts }}"
+    filter: "ansible_local"
+  when: monit_write_facts.changed is defined
+
+- name: Monitors - List configured monitors
+  command: ls -1 {{ monit_dir_rc }}
+  register: monit_services_present
+  changed_when: false
+
+- name: Monitors - Remove Unused Monitors
+  file:
+    path: "{{ monit_dir_rc }}/{{ item }}"
+    state: absent
+  with_items: "{{ monit_services_present.stdout_lines | default([]) }}"
+  when: monit_service_delete_unlisted and item|basename not in ansible_local.monit.monit_configured_services
+  notify: restart
+  ignore_errors: yes
+
+- name: Debug Removing Unused Monitors
+  debug:
+    msg:
+        - ' monit_write_facts.changed: {{ monit_write_facts.changed }} '
+        - ' ansible_local: {{ ansible_local }} '
+        - ' monit_services_present: {{ monit_services_present }} '
+        - ' monit_services_present.stdout_lines {{ monit_services_present.stdout_lines }} '
+        - ' ansible_local.monit.monit_configured_services: {{ ansible_local.monit.monit_configured_services }} '
+

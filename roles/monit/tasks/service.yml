@@ -1,0 +1,22 @@
+---
+# System D
+
+- name: System D | Copy the Service File
+  template:
+    src: service.j2
+    dest: "/lib/systemd/system/{{ _name_ }}.service"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+    mode: 0744 
+
+- name: System D | Make a Link
+  file:
+    src: "/lib/systemd/system/{{ _name_ }}.service"
+    dest: "/etc/systemd/system/"
+    state: link
+
+- name: System D | Starting and On Boot '{{ _name_ }}' Service
+  systemd:
+    name: "{{ _name_ }}"
+    state: started
+    enabled: yes

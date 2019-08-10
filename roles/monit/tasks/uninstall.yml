@@ -1,0 +1,60 @@
+---
+
+- name: Check User Name | whoami
+  command: whoami
+  register: whoami_output
+  changed_when: false
+
+- name: System V | Stop the '{{ _name_ }}' Service
+  service:
+    name: "{{ _name_ }}"
+    state: stopped
+  when: (ansible_distribution_major_version == '6' and whoami_output.stdout == 'root')
+
+- name: System V | Remove the '{{ _name_ }}' Service
+  service:
+    name: "{{ _name_ }}"
+    enabled: no
+  when: (ansible_distribution_major_version == '6' and whoami_output.stdout == 'root')
+
+- name: System D | Stop and Remove the '{{ _name_ }}' Service
+  systemd:
+    name: "{{ _name_ }}"
+    state: stopped
+    enabled: no
+  when: (ansible_distribution_major_version == '7' and whoami_output.stdout == 'root')
+
+- name: PAM Auth Disable
+  file:
+    path: "{{ pam_dir }}/{{ _name_ }}"
+    state: absent
+
+- name: Remove LogRotate for the '{{ _name_ }}'
+  file:
+    path: "{{ logrotate_conf_dir }}/{{ item.name }}"
+    state: absent
+  with_items: "{{ logrotate_scripts }}"
+
+- name: Remove Init 
+  file:
+    path: "{{ init_dir }}/{{ _name_ }}"
+    state: absent
+  when: (ansible_distribution_major_version == '6' and whoami_output.stdout == 'root')
+
+- name: Remove System D Service 
+  file:
+    path:  "/lib/systemd/system/{{ _name_ }}.service"
+    state: absent
+  when: (ansible_distribution_major_version == '7' and whoami_output.stdout == 'root')
+
+- name: Remove SymLink
+  file:
+    file: "/etc/systemd/system/{{ _name_ }}.service"
+    state: absent
+  when: (ansible_distribution_major_version == '7' and whoami_output.stdout == 'root')
+
+- name: Remove the '{{ _name_ }}'
+  file:
+    path: "{{ monit_dir }}"
+    state: absent
+    

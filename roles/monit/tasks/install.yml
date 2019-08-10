@@ -1,0 +1,96 @@
+---
+
+- name: Check User Name | whoami
+  command: whoami
+  register: whoami_output
+  changed_when: false
+
+- name: Create folders
+  file:
+    path: "{{ item.path }}"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+    state: directory
+    mode: "{{ item.mode }}"
+  with_items:
+      - { path: "{{ monit_dir_bin }}", mode: 755 }
+      - { path: "{{ monit_dir_conf }}", mode: 755 }
+      - { path: "{{ monit_dir_run }}", mode: 755 }
+      - { path: "{{ monit_dir_log }}", mode: 755 }
+      - { path: "{{ monit_dir_rc }}", mode: 755 }
+      - { path: "{{ monit_dir_events }}", mode: 755 }
+      - { path: "{{ monit_dir_facts }}", mode: 755 }
+
+- name: Copy Binary
+  copy:
+    src: "bin/monit"
+    dest: "{{ monit_dir_bin  }}"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+    mode: 755
+  notify: restart
+
+- name: Config Setup
+  template:
+    src: monitrc.j2
+    dest: "{{ monit_conf_file }}"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+    mode: 0700
+  notify: restart
+  when: monit_update_config
+
+- name: Mail Alerts Setup
+  template:
+    src: mail.j2
+    dest: "{{ monit_dir_rc }}/mail"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+    mode: 0644
+  notify: restart
+  when: monit_mail_enabled
+
+- name: Web Interface Setup
+  template:
+    src: web.j2
+    dest: "{{ monit_dir_rc }}/web"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+    mode: 0644
+  notify: restart
+  when: monit_webinterface_enabled
+
+- name: PAM Auth Setup
+  copy:
+    src: "auth/monit.pam"
+    dest: "{{ pam_dir }}/{{ _name_ }}"
+    owner: "{{ monit_owner }}"
+    group: "{{ monit_group }}"
+    mode: 0644
+  when: monit_pam_enabled
+
+- name: PAM Auth Disable
+  file:
+    path: "{{ pam_dir }}/{{ _name_ }}"
+    state: absent
+  when: not monit_pam_enabled
+
+- name: Debug System Information
+  debug:
+    msg:
+        - 'User: {{ whoami_output.stdout }} | Linux: {{ ansible_distribution }} | Version: {{ ansible_distribution_major_version }}'
+
+- name: RedHat 6 | Upstart Setup | Required a Root Privilege
+  include_tasks: upstart.yml 
+  when: (ansible_distribution_major_version == '6' and whoami_output.stdout == 'root')
+
+- name: RedHat 7 | Service Setup | Required a Root Privilege
+  include_tasks: service.yml
+  when: (ansible_distribution_major_version == '7' and whoami_output.stdout == 'root')
+
+- name: Logrotate Configuration
+  import_tasks: logrotate.yml
+  when: monit_logrotate_enabled
+
+
+

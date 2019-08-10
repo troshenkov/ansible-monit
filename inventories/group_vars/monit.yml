@@ -1,0 +1,68 @@
+# Monit 
+# Monit General Config
+monit_dir: "/opt/monit"
+monit_dir_bin: "{{ monit_dir }}/bin"
+monit_dir_conf: "{{ monit_dir }}/conf"
+monit_dir_run: "{{ monit_dir }}/run"
+monit_dir_log: "{{ monit_dir }}/log"
+monit_dir_rc: "{{ monit_dir }}/conf.d"
+monit_dir_events: "{{ monit_dir }}/events"
+monit_dir_facts: "{{ monit_dir }}/facts.d"
+#
+monit_conf_file: "{{ monit_dir_conf }}/monitrc.master"
+monit_log_file: "{{ monit_dir_log }}/monit.log"
+monit_state_file: "{{ monit_dir_run }}/monit.state"
+monit_id_file: "{{ monit_dir_run }}/monit.id"
+monit_pid_file: "{{ monit_dir_run }}/monit.pid"
+mmonit_collector: "http://monit:monit@willits2:8080/collector"
+#
+# Monit Mail Alerts Config
+monit_mailserver_host: "localhost"
+monit_mailserver_port: 25
+#monit_mailserver_user
+#monit_mailserver_password 
+#monit_mailserver_ssl_version
+monit_alert_addresses:
+    - domain.ltd
+monit_alert_mail_from: "{{ _name_ }}@{{ansible_hostname}}"
+monit_alert_mail_format:
+  from:    Monit <monit@$HOST>
+  subject: Monit alert --  $HOST $EVENT $SERVICE
+  message: $EVENT Service $SERVICE
+##|
+monit_alert_mail_message: |+
+    Date:        $DATE
+    Action:      $ACTION
+    Host:        $HOST
+    Description: $DESCRIPTION
+    
+    Link: http://$HOST:{{ monit_webinterface_port }}
+      
+      Your faithful robot ,
+      Monit
+####|
+# Monit Web Interface Config
+monit_webinterface_bind: 0.0.0.0
+monit_webinterface_port: 2814
+monit_webinterface_acl_rules:
+    - 10.0.0.0/8
+    - 171.0.0.0/8
+    - 64.0.0.0/8
+####|
+#monit_webinterface_rw_group
+#monit_webinterface_r_group
+
+# Monit Logrotate
+logrotate_scripts:
+  - name: "{{ _name_ }}.logrotate" # Name of logrotate file
+    path: 
+        - "{{ monit_log_file }}" 
+        - "/var/log/monit.log"
+    options:
+        - missingok
+        - notifempty
+        - size 100k
+        - create 0644 root root
+    postrotate: 
+        - /bin/kill -HUP `cat {{ monit_pid_file }} 2>/dev/null` 2> /dev/null || true
+

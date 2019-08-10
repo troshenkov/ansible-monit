@@ -1,0 +1,13 @@
+{
+  "monit_configured_services": [
+{% for service in monit_services %}
+    "{{ service.name }}",
+{% endfor %}
+{% if monit_mail_enabled %}
+    "mail",
+{% endif %}
+{% if monit_webinterface_enabled %}
+    "web"
+{% endif %}
+  ]
+}

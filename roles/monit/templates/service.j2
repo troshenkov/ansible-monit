@@ -1,0 +1,36 @@
+# This file is systemd template for monit service. To
+# register monit with systemd, place the monit.service file
+# to the /lib/systemd/system/ directory and then start it
+# using systemctl (see bellow).
+#
+# Enable monit to start on boot:
+#         systemctl enable monit.service
+#
+# Start monit immediately:
+#         systemctl start monit.service
+#
+# Stop monit:
+#         systemctl stop monit.service
+#
+# Status:
+#         systemctl status monit.service
+
+# TEMPLATE
+# {{ ansible_managed  }}
+
+[Unit]
+Description=Pro-active monitoring utility for unix systems
+After=network.target
+Documentation=man:monit(1) https://mmonit.com/wiki/Monit/HowTo
+
+[Service]
+Type=simple
+KillMode=process
+ExecStart={{ monit_dir_bin }}/{{ _name_ }} -I -c {{ monit_conf_file }}
+ExecStop={{ monit_dir_bin }}/{{ _name_ }} -c {{ monit_conf_file }} quit
+ExecReload={{ monit_dir_bin }}/{{ _name_ }} -c {{ monit_conf_file }} reload
+Restart=on-abnormal
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

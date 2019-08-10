@@ -1,0 +1,13 @@
+---
+
+- include: uninstall.yml
+  when: ( monit_installed == 'no' or monit_installed == 'reinstall'  )
+
+- include: install.yml
+  tags: install
+  when: ( monit_installed == 'yes' or monit_installed == 'reinstall' )
+ 
+- include: config.yml
+  tags: config
+  when: ( monit_installed == 'yes' or monit_installed == 'reinstall' )
+

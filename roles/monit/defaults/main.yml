@@ -1,0 +1,19 @@
+monit_services: []
+# yes/no/reinatall ( --extra-vars "monit_installed=yes/no/reinstall"  )
+monit_installed: 'yes'
+monit_service_delete_unlisted: true
+monit_update_config: true
+monit_mail_enabled: true
+monit_webinterface_enabled: true
+monit_pam_enabled: true
+monit_logrotate_enabled: true
+monit_cycle: 120
+monit_eventqueue_slots: 100
+_name_: "monit"
+monit_owner: "root"
+monit_group: "root"
+pam_dir: "/etc/pam.d/"
+init_dir: "/etc/init.d/"
+
+logrotate_conf_dir: "/etc/logrotate.d/"
+logrotate_scripts: []

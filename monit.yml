@@ -1,0 +1,17 @@
+---
+
+- hosts: test
+  #become_user: root
+  #become_method: sudo
+  roles:
+    - role: monit
+  vars:
+    # yes/no/reinatall ( --extra-vars "monit_installed=yes/no/reinstall" )
+    monit_installed: 'yes'
+    monit_service_delete_unlisted: true
+    monit_update_config: true
+    monit_mail_enabled: true
+    monit_webinterface_enabled: true
+    monit_pam_enabled: true
+    monit_logrotate_enabled: true
+

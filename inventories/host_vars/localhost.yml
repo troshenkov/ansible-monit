@@ -1,0 +1,9 @@
+monit_owner: "dtroshen"
+monit_group: "eng"
+monit_dir: "~/opt/monit"
+pam_dir: "~/opt"
+monit_dir_rc: "{{ monit_dir }}/conf.d"
+monit_dir_facts: "{{ monit_dir }}/facts.d"
+logrotate_conf_dir: "~/opt"
+init_dir: "~/opt"
+
