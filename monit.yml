@@ -1,17 +1,61 @@
+# ===================================================================
+# Ansible Playbook: Monit Setup
+# ===================================================================
+# Purpose:
+#   - This Ansible playbook automates the setup and configuration of the
+#     Monit service on a specified host.
+#   - It allows the installation, configuration of services, mail, web 
+#     interface, PAM, and logrotate based on provided variables.
+#
+# Usage:
+#   - Run this playbook to install and configure Monit on the target system.
+#   - Modify the variables as needed to control service features (e.g., 
+#     monit_installed, monit_mail_enabled).
+#
+# Options:
+#   - monit_installed: yes/no/reinstall   # Control Monit installation status
+#   - monit_service_delete_unlisted: true/false  # Enable/disable service deletion
+#   - monit_update_config: true/false    # Update Monit configuration
+#   - monit_mail_enabled: true/false     # Enable/disable Monit mail notifications
+#   - monit_webinterface_enabled: true/false  # Enable/disable the Monit web interface
+#   - monit_pam_enabled: true/false      # Enable/disable PAM authentication for web interface
+#   - monit_logrotate_enabled: true/false   # Enable/disable logrotate for Monit logs
+#
+# Author: Dmitry Troshenkov (troshenkov.d@gmail.com)
+# Date Created: <Creation Date>
+# Last Updated: <Last Update Date>
+#
+# ===================================================================
+
 ---
-
 - hosts: test
-  #become_user: root
-  #become_method: sudo
-  roles:
-    - role: monit
-  vars:
-    # yes/no/reinatall ( --extra-vars "monit_installed=yes/no/reinstall" )
-    monit_installed: 'yes'
-    monit_service_delete_unlisted: true
-    monit_update_config: true
-    monit_mail_enabled: true
-    monit_webinterface_enabled: true
-    monit_pam_enabled: true
-    monit_logrotate_enabled: true
+  become: true  # Uncomment if you need elevated privileges
+  become_user: root  # Uncomment to become the root user
+  become_method: sudo  # Uncomment to use sudo for privilege escalation
 
+  roles:
+    - role: monit  # Role to install and configure monit service
+
+  vars:
+    # Variables for monit configuration
+
+    # Whether monit should be installed. Possible values: yes, no, reinstall
+    monit_installed: 'yes'
+
+    # Should monit delete services that are not listed in the config file?
+    monit_service_delete_unlisted: true
+
+    # Whether to update the monit configuration (useful if making changes to the config)
+    monit_update_config: true
+
+    # Enable/disable the monit mail notification feature
+    monit_mail_enabled: true
+
+    # Enable/disable the monit web interface
+    monit_webinterface_enabled: true
+
+    # Enable/disable PAM authentication for monit web interface
+    monit_pam_enabled: true
+
+    # Enable/disable logrotate for monit logs
+    monit_logrotate_enabled: true
